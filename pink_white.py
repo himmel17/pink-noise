@@ -31,12 +31,10 @@ def main():
     # L        = 2**14    # Down Sample後のデータ数(for fft)
     L        = 2**14 * 16 # Down Sample後のデータ数(for welch)
     t        = np.arange(0, 1024 + L/Fspl, 1 / Fspl)
-    Pw_sim_dB = -6           # PSD by Spice Sim at white. (one-sided) [dB/Hz]
+    Pw_sim_dB = -6        # PSD by Spice Sim at white. (one-sided) [dB/Hz]
     F0      = 10          # Noise Band Width by Spice Sim
     Ffli    = 10**(-3)    # probing frequency of flicker noise
-    Pf_sim_dB = 20          # PSD by Sim at Ffli. (one-sided) [dB/Hz]
-
-    # beta = 10**(Pf_sim_dB/10) * Ffli # Flicker coefficiency
+    Pf_sim_dB = 20        # PSD by Sim at Ffli. (one-sided) [dB/Hz]
 
     # Spice Sim結果からWhite Noise成分のσを算出
     Pw_sim   = 10**(Pw_sim_dB / 10) # [V**2/Hz]
@@ -60,27 +58,17 @@ def main():
     fre = fftpack.fftfreq(len(t), d=1./Fspl)
 
     # %% shaping in freq domain
-    # Spink = Swhi * pinkShapingTwoside(fre, Knee, Alpha)
     Spink = Swhi * pinkShaping(fre, Knee, Alpha)
 
     # %% Inverse-FFT
     Tpink_re_im = fftpack.ifft(Spink)
     Tpink  = np.real(Tpink_re_im) # 虚部(位相)の情報は現実世界のノイズには載らないので無視
 
-    # %% fftでPSD (乱数Tpinkから2のべき乗個だけsliceして，FFT評価)
-    # NFFT = 2**nextpow2minus1(len(Tpink))
-    # Tfft = Tpink[-int(NFFT):]
-    # Y_all = fftpack.fft(Tfft, NFFT)
-    # Y_nyq = Y_all[0:int(NFFT/2)+1]
-    # Pxx = np.abs(Y_nyq)**2 / (NFFT * Fspl)
-    # Pxx[1:-1] = 2 * Pxx[1:-1]   # one-sided
-    # freq = (1 / L) * np.arange(NFFT/2 + 1) * Fspl
-
     # %% Calculating PSD by welch
     NFFT = 2**nextpow2minus1(len(Tpink))
     Tfft = Tpink[-int(NFFT):]
     freq, Pxx = signal.welch(x=Tfft, fs=Fspl, window='boxcar',
-                             nperseg=2**14, noverlap=None,  # 50%
+                             nperseg=2**14, noverlap=None,  # 50% overlap
                              nfft=None, detrend='constant',  # constant,linear
                              return_onesided=True)
 
