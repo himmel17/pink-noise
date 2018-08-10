@@ -19,15 +19,15 @@ https://gist.github.com/zonca/979729
 
 
 def main():
-    Fspl     = 4          # [Hz] Sampling Freq
-    Alpha    = .5         # Slope of Pink Noise(0.5でFlicker Noise)
-    # L        = 2**14    # Down Sample後のデータ数(for fft)
-    L        = 2**14 * 16 # Down Sample後のデータ数(for welch)
-    t        = np.arange(0, 1024 + L/Fspl, 1 / Fspl)
-    Pw_sim_dB = 20        # PSD by Spice Sim at white. (one-sided) [dB/Hz]
-    F0      = 0.5         # Noise Band Width by Spice Sim
-    Ffli    = 10**(-3)    # probing frequency of flicker noise
-    Pf_sim_dB = 30        # PSD by Sim at Ffli. (one-sided) [dB/Hz]
+    Fspl      = 4          # [Hz] Sampling Freq
+    Alpha     = .5         # Slope of Pink Noise(0.5でFlicker Noise)
+    L         = 2**14 * 16 # データ数
+    nperseg   = 2**14      # welchでスペクトル推定するときのセグメントデータ数(<=L)
+    t         = np.arange(0, 1024 + L/Fspl, 1/Fspl)
+    Pw_sim_dB = 20         # PSD by Spice Sim at white. (one-sided) [dB/Hz]
+    F0        = 0.5        # Noise Band Width by Spice Sim
+    Ffli      = 10**(-3)   # probing frequency of flicker noise
+    Pf_sim_dB = 30         # PSD by Sim at Ffli. (one-sided) [dB/Hz]
 
     # Spice Sim結果からWhite Noise成分のσを算出
     Pw_sim   = 10**(Pw_sim_dB / 10) # [V**2/Hz]
@@ -61,7 +61,7 @@ def main():
     NFFT = 2**nextpow2minus1(len(Tpink))
     Tfft = Tpink[-int(NFFT):]
     freq, Pxx = signal.welch(x=Tfft, fs=Fspl, window='boxcar',
-                             nperseg=2**14, noverlap=None,  # 50% overlap
+                             nperseg=nperseg, noverlap=None,  # 50% overlap
                              nfft=None, detrend='constant',  # constant,linear
                              return_onesided=True)
 
